@@ -18,6 +18,7 @@ def get_request_data(doc):
 
   conditions = [
     frappe._dict(
+      dt=x.dt,
       type=x.type,
       fieldname=x.fieldname,
       operator=x.operator,

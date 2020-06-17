@@ -8,16 +8,19 @@ This app extends the Frappe V13 EventStreaming module with the following functio
   The permission to `read` the document for a consumer is withheld until all the conditions satisfy.
 
   But this means that, we have to manually push old `Update Logs` when conditions satisfy at some point in the future.
+  Now, how do we know when to push old update logs ?
+  We add a child Table MultiSelect listing all the Consumers to which a particular Update Log was read by.
 
   - Consumer Specific Conditions
     We add a Child table in EventProducer & EventConsumer called `Event Condition`
     ```js
     {
-      type: fieldname | py-eval
+      dt: "Link/DocType",
+      type: "fieldname | py-eval",
       // type: fieldname
       fieldname: "",
       operator: "",
-      value: ""
+      value: "",
       // type: py-eval
       condition: ""
     }
@@ -27,10 +30,11 @@ This app extends the Frappe V13 EventStreaming module with the following functio
     A global doctype `Event DocType Condition`
     ```js
     {
-      dt:
+      dt: ""
       conditions: EventCondition[]
     }
     ```
+
 - Ignore fields
 
 #### License

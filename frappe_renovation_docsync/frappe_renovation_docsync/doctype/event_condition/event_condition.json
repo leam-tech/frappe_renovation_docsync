@@ -5,6 +5,7 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "dt",
   "type",
   "section_break_2",
   "fieldname",
@@ -52,11 +53,18 @@
    "fieldname": "condition",
    "fieldtype": "Code",
    "label": "Condition"
+  },
+  {
+   "fieldname": "dt",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "DocType",
+   "options": "DocType"
   }
  ],
  "istable": 1,
  "links": [],
- "modified": "2020-06-16 20:06:03.839075",
+ "modified": "2020-06-17 12:29:50.752079",
  "modified_by": "Administrator",
  "module": "Frappe Renovation Docsync",
  "name": "Event Condition",
