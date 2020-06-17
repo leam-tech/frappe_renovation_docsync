@@ -16,12 +16,21 @@ def get_request_data(doc):
     else:
       consumer_doctypes.append(entry.ref_doctype)
 
-  conditions = [x.as_dict() for x in doc.get("conditions", [])]
+  conditions = [
+    frappe._dict(
+      type=x.type,
+      fieldname=x.fieldname,
+      operator=x.operator,
+      value=x.value,
+      condition=x.condition
+    )
+    for x in doc.get("conditions", [])
+  ]
 
   return {
     'event_consumer': get_url(),
     'consumer_doctypes': frappe.as_json(consumer_doctypes),
-    'conditions': conditions,
+    'conditions': frappe.as_json(conditions),
     'user': doc.user,
     'in_test': frappe.flags.in_test
   }
