@@ -1,0 +1,69 @@
+{
+ "actions": [],
+ "creation": "2020-06-16 20:06:03.839075",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "type",
+  "section_break_2",
+  "fieldname",
+  "operator",
+  "value",
+  "section_break_6",
+  "condition"
+ ],
+ "fields": [
+  {
+   "fieldname": "type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Type",
+   "options": "DocField Value\nEval Condition",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.type == \"DocField Value\"",
+   "fieldname": "section_break_2",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "fieldname",
+   "fieldtype": "Data",
+   "label": "Fieldname"
+  },
+  {
+   "fieldname": "operator",
+   "fieldtype": "Select",
+   "label": "Operator",
+   "options": "=\n!="
+  },
+  {
+   "fieldname": "value",
+   "fieldtype": "Data",
+   "label": "Value"
+  },
+  {
+   "depends_on": "eval:doc.type == \"DocField Value\"",
+   "fieldname": "section_break_6",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "condition",
+   "fieldtype": "Code",
+   "label": "Condition"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2020-06-16 20:06:03.839075",
+ "modified_by": "Administrator",
+ "module": "Frappe Renovation Docsync",
+ "name": "Event Condition",
+ "owner": "Administrator",
+ "permissions": [],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}
