@@ -1,7 +1,11 @@
-## Frappe Renovation Docsync
+# Frappe Renovation Docsync
 
-Extensions for Frappe Event Streams
+This app is an extension for `Frappe Event Streaming` module.   
+This README is split into
+- [Customizations](#Customizations)
+- [Concerns](#Concerns)
 
+## Customizations
 This app extends the Frappe V13 EventStreaming module with the following functions:
 - Conditional Events  
   Restrict syncing of documents. This is done via ControllerPermission Hook `has_permission`.
@@ -37,6 +41,11 @@ This app extends the Frappe V13 EventStreaming module with the following functio
 
 - Ignore fields
 
-#### License
+## Concerns
+### `has_permission` has no effect on get_list
+`Conditional Events` feature is implemented by restricting read-access to `Event Update Log` via `has_permission` hook. The issue is that this hook is run only when `frappe.get_doc` is called, and ignore on `frappe.get_list`. In order to workaround this, `frappe.event_producer.get_updates` had to be updated
+[a link](https://github.com/leam-tech/frappe_renovation_docsync/blob/master/frappe_renovation_docsync/utils/update_log.py#L33)
+
+## License
 
 MIT
