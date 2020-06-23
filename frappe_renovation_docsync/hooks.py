@@ -20,6 +20,12 @@ fixtures = [
   }
 ]
 
+doc_events = {
+  "Event Consumer": {
+    "on_trash": "frappe_renovation_docsync.doc_events.event_consumer.on_trash"
+  }
+}
+
 override_whitelisted_methods = {
   'frappe.event_streaming.doctype.event_consumer.event_consumer.register_consumer': 'frappe_renovation_docsync.utils.event_consumer.register_consumer'
 }
