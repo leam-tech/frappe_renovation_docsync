@@ -103,7 +103,15 @@ def get_updates(producer_site, last_update, doctypes):
 
 @frappe.whitelist()
 def get_producer_updates(event_consumer, doctypes, last_update):
+  """
+  This function is invoked by the Consumer on the Producer site.
+  It returns filtered EventUpdateLogs.
+  This also handles notifying Consumer of all the past History if the Consumer is not upto date on a particular Update Log
 
+  :param event_consumer: The Name/Url of the Consumer
+  :param doctypes: List of doctypes to stream
+  :param last_update: the date
+  """
   from frappe_renovation_docsync.utils import is_consumer_uptodate, mark_consumer_read, notify_consumer_of_history
 
   if isinstance(doctypes, string_types):
