@@ -28,7 +28,7 @@ def get_request_data(doc):
           fieldname=x.fieldname,
           operator=x.operator,
           value=x.value,
-          condition=x.eval
+          eval=x.eval
       )
       for x in doc.get("conditions", [])
   ]
@@ -79,7 +79,7 @@ def update_event_consumer(self):
               fieldname=x.fieldname,
               operator=x.operator,
               value=x.value,
-              condition=x.eval
+              eval=x.eval
           )
           for x in self.get("conditions", [])
       ]
