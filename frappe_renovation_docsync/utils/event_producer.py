@@ -10,33 +10,21 @@ def get_request_data(doc):
   This function is actually defined in
     frappe.event_streaming.doctype.event_producer.event_producer.EventProducer.get_request_data
 
-  We are patching the function so that we can send the `conditions` array while creating the `Consumer` on Producer site.
+  We are patching the function so that we can send the `condition` field while creating the `Consumer` on Producer site.
   """
   consumer_doctypes = []
   for entry in doc.producer_doctypes:
     if entry.has_mapping:
       # if mapping, subscribe to remote doctype on consumer's site
-      consumer_doctypes.append(frappe.db.get_value(
-          'Document Type Mapping', entry.mapping, 'remote_doctype'))
+      consumer_doctypes.append({"ref_doctype": frappe.db.get_value(
+          'Document Type Mapping', entry.mapping, 'remote_doctype'), "condition": entry.condition})
     else:
-      consumer_doctypes.append(entry.ref_doctype)
-
-  conditions = [
-      frappe._dict(
-          dt=x.dt,
-          type=x.type,
-          fieldname=x.fieldname,
-          operator=x.operator,
-          value=x.value,
-          eval=x.eval
-      )
-      for x in doc.get("conditions", [])
-  ]
+      consumer_doctypes.append(
+          {"ref_doctype": entry.ref_doctype, "condition": entry.condition})
 
   return {
       'event_consumer': get_url(),
       'consumer_doctypes': frappe.as_json(consumer_doctypes),
-      'conditions': frappe.as_json(conditions),
       'user': doc.user,
       'in_test': frappe.flags.in_test
   }
@@ -67,22 +55,11 @@ def update_event_consumer(self):
 
         event_consumer.consumer_doctypes.append({
             'ref_doctype': ref_doctype,
+            'condition': entry.condition,
             'status': get_approval_status(config, ref_doctype)
         })
       if frappe.flags.in_test:
         event_consumer.in_test = True
-
-      event_consumer.conditions = [
-          frappe._dict(
-              dt=x.dt,
-              type=x.type,
-              fieldname=x.fieldname,
-              operator=x.operator,
-              value=x.value,
-              eval=x.eval
-          )
-          for x in self.get("conditions", [])
-      ]
 
       event_consumer.user = self.user
       event_consumer.incoming_change = True
@@ -101,6 +78,34 @@ def get_updates(producer_site, last_update, doctypes):
   return [frappe._dict(d) for d in docs]
 
 
+def get_unread_update_logs(consumer_name, dt, dn):
+  """
+  Get old logs unread by the consumer on a particular document
+  """
+  already_consumed = [x[0] for x in frappe.db.sql("""
+    SELECT
+      update_log.name
+    FROM `tabEvent Update Log` update_log
+    JOIN `tabEvent Consumer Selector` consumer ON consumer.parent = update_log.name
+    WHERE
+      consumer.consumer = %(consumer)s
+  """, {"consumer": consumer_name}, as_dict=0)]
+
+  logs = frappe.get_all(
+      "Event Update Log",
+      fields=['update_type', 'ref_doctype',
+              'docname', 'data', 'name', 'creation'],
+      filters={
+          "ref_doctype": dt,
+          "docname": dn,
+          "name": ["not in", already_consumed]
+      },
+      order_by="creation"
+  )
+
+  return logs
+
+
 @frappe.whitelist()
 def get_producer_updates(event_consumer, doctypes, last_update):
   """
@@ -112,10 +117,8 @@ def get_producer_updates(event_consumer, doctypes, last_update):
   :param doctypes: List of doctypes to stream
   :param last_update: the date
   """
-  from frappe_renovation_docsync.utils import is_consumer_uptodate, mark_consumer_read, notify_consumer_of_history
-
-  if isinstance(doctypes, string_types):
-    doctypes = frappe.parse_json(doctypes)
+  from frappe_renovation_docsync.utils.update_log import has_consumer_access
+  from frappe_renovation_docsync.utils import is_consumer_uptodate, mark_consumer_read
 
   consumer = frappe.get_doc("Event Consumer", event_consumer)
   docs = frappe.get_list(
@@ -127,22 +130,28 @@ def get_producer_updates(event_consumer, doctypes, last_update):
       order_by='creation desc'
   )
 
-  to_history_sync = []
   result = []
+  to_update_history = []
   for d in docs:
-    if (d.ref_doctype, d.docname) in to_history_sync:
-      # will be notified by background jobs
-      continue
-    if not frappe.has_permission(frappe.get_doc("Event Update Log", d.name)):
+    if (d.ref_doctype, d.docname) in to_update_history:
       continue
 
-    if is_consumer_uptodate(update_log=d, consumer=consumer):
-      frappe.enqueue(mark_consumer_read, update_log_name=d.name,
-                     consumer_name=consumer.name, enqueue_after_commit=True)
-      result.append(d)
+    if not has_consumer_access(consumer=consumer, update_log=d):
+      continue
+
+    if not is_consumer_uptodate(d, consumer):
+      to_update_history.append((d.ref_doctype, d.docname))
+      # get_unread_update_logs will have the current log
+      old_logs = get_unread_update_logs(
+          consumer.name, d.ref_doctype, d.docname)
+      old_logs.reverse()
+      result.extend(old_logs)
     else:
-      to_history_sync.append((d.ref_doctype, d.docname))
-      frappe.enqueue(notify_consumer_of_history, consumer_name=consumer.name,
-                     dt=d.ref_doctype, dn=d.docname, enqueue_after_commit=True)
+      result.append(d)
+
+  for d in result:
+    mark_consumer_read(update_log_name=d.name, consumer_name=consumer.name)
+
+  result.reverse()
 
   return result

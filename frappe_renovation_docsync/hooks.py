@@ -30,10 +30,6 @@ override_whitelisted_methods = {
   'frappe.event_streaming.doctype.event_consumer.event_consumer.register_consumer': 'frappe_renovation_docsync.utils.event_consumer.register_consumer'
 }
 
-has_permission = {
-  "Event Update Log": "frappe_renovation_docsync.utils.update_log.consumer_perm_check"
-}
-
 # Includes in <head>
 # ------------------
 
