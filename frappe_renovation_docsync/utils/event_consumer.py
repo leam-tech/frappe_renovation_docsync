@@ -22,10 +22,16 @@ def register_consumer(data):
   consumer_doctypes = json.loads(data['consumer_doctypes'])
 
   for entry in consumer_doctypes:
+    if isinstance(entry, dict):
+      ref_doctype = entry['ref_doctype']
+      conditions = entry['condition']
+    else:
+      ref_doctype = entry
+      conditions = None
     consumer.append('consumer_doctypes', {
-      'ref_doctype': entry['ref_doctype'],
+      'ref_doctype': ref_doctype,
       'status': 'Pending',
-      'condition': entry['condition']
+      'condition': conditions
     })
 
   api_key = frappe.generate_hash(length=10)
