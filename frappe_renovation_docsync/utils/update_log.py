@@ -42,7 +42,7 @@ def has_consumer_access(consumer, update_log):
     if condition.startswith("cmd:"):
       return frappe.call(frappe.get_attr(condition.split("cmd:")[1].strip()), consumer=consumer, update_log=update_log)
     else:
-      return frappe.safe_eval(condition.eval, frappe._dict(doc=doc))
+      return frappe.safe_eval(condition, frappe._dict(doc=doc))
 
   return False
 

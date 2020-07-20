@@ -120,6 +120,9 @@ def get_producer_updates(event_consumer, doctypes, last_update):
   from frappe_renovation_docsync.utils.update_log import has_consumer_access
   from frappe_renovation_docsync.utils import is_consumer_uptodate, mark_consumer_read
 
+  if isinstance(doctypes, str):
+    doctypes = frappe.parse_json(doctypes)
+
   consumer = frappe.get_doc("Event Consumer", event_consumer)
   docs = frappe.get_list(
       doctype='Event Update Log',
