@@ -31,21 +31,50 @@ def has_consumer_access(consumer, update_log):
     return len([x for x in last_update_log.consumers if x.consumer == consumer.name])
 
   doc = frappe.get_doc(update_log.ref_doctype, update_log.docname)
-  for dt_entry in consumer.consumer_doctypes:
-    if dt_entry.ref_doctype != update_log.ref_doctype:
-      continue
+  try:
+    for dt_entry in consumer.consumer_doctypes:
+      if dt_entry.ref_doctype != update_log.ref_doctype:
+        continue
 
-    if not dt_entry.condition:
-      return True
+      if not dt_entry.condition:
+        return True
 
-    condition: str = dt_entry.condition
-    if condition.startswith("cmd:"):
-      return frappe.call(frappe.get_attr(condition.split("cmd:")[1].strip()), consumer=consumer, update_log=update_log)
-    else:
-      return frappe.safe_eval(condition, frappe._dict(doc=doc))
-
+      condition: str = dt_entry.condition
+      if condition.startswith("cmd:"):
+        cmd, args = get_cmd_and_args(condition)
+        args["consumer"] = consumer
+        args["update_log"] = update_log
+        return frappe.call(cmd, **args)
+      else:
+        return frappe.safe_eval(condition, frappe._dict(doc=doc))
+  except Exception as e:
+    frappe.log_error(title="has_consumer_access error", message=e)
   return False
 
+def get_cmd_and_args(condition):
+  """
+  cmd: ____________________
+  args: {
+    
+  }
+  """
+  cmd = condition.split("cmd:")[1]
+  args = frappe._dict()
+  if "args:" in cmd:
+    cmd = cmd.split("args:")
+    args = cmd[1]
+    cmd = cmd[0]
+    try:
+      print(args)
+      args = frappe.parse_json(args)
+    except:
+      args = frappe._dict()
+
+  if "\n" in cmd:
+    cmd = cmd.split("\n")[0]
+
+  cmd = cmd.strip()
+  return cmd, args
 
 def get_consumer(user):
   """
