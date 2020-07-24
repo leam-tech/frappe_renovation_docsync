@@ -51,11 +51,12 @@ def has_consumer_access(consumer, update_log):
     frappe.log_error(title="has_consumer_access error", message=e)
   return False
 
+
 def get_cmd_and_args(condition):
   """
   cmd: ____________________
   args: {
-    
+
   }
   """
   cmd = condition.split("cmd:")[1]
@@ -76,6 +77,7 @@ def get_cmd_and_args(condition):
   cmd = cmd.strip()
   return cmd, args
 
+
 def get_consumer(user):
   """
   This function will get the EventConsumer associated with the user
@@ -89,3 +91,30 @@ def get_consumer(user):
     return None
 
   return frappe.get_doc("Event Consumer", consumer)
+
+
+def notify_consumers(doc, method):
+  """
+  Notify just those consumers who can actually consume the logs.
+  :param doc: Event Update Log instance
+  :param method: after_insert
+  """
+
+  # We have to enqueue_after_commit, otherwise the UpdateLog wont be in db anytime
+  frappe.enqueue(notify_event_consumers,
+                 update_log=doc.as_dict(), enqueue_after_commit=True)
+
+
+def notify_event_consumers(update_log):
+  """
+  Notify those Consumers who has access to the update log
+  """
+  from frappe.event_streaming.doctype.event_consumer.event_consumer import notify
+  event_consumers = frappe.get_all('Event Consumer Document Type', ['parent'], {
+                                   'ref_doctype': update_log.ref_doctype, 'status': 'Approved'})
+  for entry in event_consumers:
+    consumer = frappe.get_doc('Event Consumer', entry.parent)
+    if not has_consumer_access(consumer=consumer, update_log=update_log):
+      continue
+    consumer.flags.notified = False
+    notify(consumer)
