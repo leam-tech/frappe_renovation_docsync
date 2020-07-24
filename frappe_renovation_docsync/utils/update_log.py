@@ -30,7 +30,7 @@ def has_consumer_access(consumer, update_log):
         "Event Update Log", last_update_log[0].name)
     return len([x for x in last_update_log.consumers if x.consumer == consumer.name])
 
-  doc = frappe.get_doc(update_log.ref_doctype, update_log.docname)
+  doc = frappe.get_cached_doc(update_log.ref_doctype, update_log.docname)
   try:
     for dt_entry in consumer.consumer_doctypes:
       if dt_entry.ref_doctype != update_log.ref_doctype:
