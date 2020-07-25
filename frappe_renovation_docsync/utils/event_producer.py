@@ -4,6 +4,18 @@ from frappe.utils.data import get_url
 from frappe.event_streaming.doctype.event_producer.event_producer import get_approval_status, get_producer_site
 
 
+def update_row_changed(local_doc, changed):
+  """Sync child table row updation type update"""
+  for tablename, rows in iteritems(changed):
+    old = local_doc.get(tablename)
+    if not old:
+      continue
+    for doc in old:
+      for row in rows:
+        if row['name'] == doc.get('name'):
+          doc.update(row)
+
+
 def get_request_data(doc):
   """
   This function is called when Consumer site is making `EventConsumer` on producer site.
