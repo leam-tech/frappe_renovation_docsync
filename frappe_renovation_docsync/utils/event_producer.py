@@ -1,6 +1,7 @@
 import frappe
 from six import string_types
 from frappe.utils.data import get_url
+from six import iteritems
 from frappe.event_streaming.doctype.event_producer.event_producer import get_approval_status, get_producer_site
 
 
