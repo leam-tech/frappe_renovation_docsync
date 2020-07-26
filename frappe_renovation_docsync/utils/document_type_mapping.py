@@ -1,4 +1,6 @@
 import frappe
+import json
+from six import iteritems
 from frappe.event_streaming.doctype.document_type_mapping.document_type_mapping import get_mapped_child_table_docs
 
 def get_mapping(self, doc, producer_site, update_type):
