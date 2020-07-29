@@ -23,6 +23,9 @@ fixtures = [
 doc_events = {
   "Event Consumer": {
     "on_trash": "frappe_renovation_docsync.doc_events.event_consumer.on_trash"
+  },
+  "Event Update Log": {
+    "before_insert": "frappe_renovation_docsync.doc_events.event_update_log.before_insert"
   }
 }
 
