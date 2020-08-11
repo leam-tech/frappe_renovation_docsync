@@ -63,6 +63,8 @@ def _update_file_url(doctype, doc):
   return doc
 
 def get_file_url(v):
+  if not v:
+    return v
   if "http" not in v:
     return f"{get_url()}{v}"
   return v
